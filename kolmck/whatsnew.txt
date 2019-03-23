@@ -1,0 +1,223 @@
+-------------------------------------------------------------------
+3.12.14
+-------------------------------------------------------------------
+Merge with unofficial 3.22 version compatible with fpc 2.6.4 and 2.7.1 i386 and x64 compilers by "Dmitri K dmiko@mail333.com (dmiko)" principal work 
+and "Thaddy de Koning thaddy@thaddy.com" (merge 3.22)
+
+KOL:
+* a LOT of declarations\fixes for x64\FPC support (by dmiko and Thaddy)
++ TList.SortEx - for custom sorting Items
++ TStrList.IndexOfName_NoCaseFast, TStrList.IndexOfName_Fast, TStrList.Values_NocaseFast[], TStrList.Values_Fast[] - faster than TStrList.IndexOfName\Values\etc..
++ TStrList.Remove\RemoveByName - Removes first entry of a Value\LineName in the list
++ TStrList.IsEmpty - check list empty 
++ TStrList.Add2\Insert2\Delete2\Items2[Idx, Col]\Swap2\IndexOf2\Count2\ColsCount - work with TStrList like with table[Idx, Col]
++ TStrListEx.SortEx - for custom sorting Items with Objects
+* SVN_BUG#1: TStrListEx.SortEx - breaks objects association fixed (thanks to tacituseu)
+* SVN_BUG#2: TControl.FreeCharFormatRec - fixed STATIC_RICHEDIT_DATA define (by tacituseu)
+* TControl.LVColInsert - return inserted col index
++ TControl.LVGetHeader - Gets the handle to the header control used by the list-view control
++ TControl.LVSubItemAtPos - Return index of subitem at the given position
++ TControl.LVIndexOfEx - Returns first list view item index with subitem ACol matching S
++ TControl.TVItemInsert - extended version of TVInsert: can set images and set ItemData
+* NewReadWriteFileStream - smaller code by use winapi flag ofOpenAlways instead FileExists function
+* TMenu.Destroy\RemoveSubMenu - fixed memory leak on destroy (by dotnet20)
+* CallDefFrameProc - fixed crash when use MDI
+- ASM: TStrList.AddStrings\LoadFromStream\MergeFromFile\SaveToFile - switched off because maybe can get crash (need tests)
+* PAS: TStrList.LoadFromStream\SaveToFile - fixed
+* TStrList.IndexOfName - small speedup
+* TStrList.IndexOfName_NoCase - this code "while (p^ <> #0) and (p^ <= ' ') do inc( p );" is deleted, because sometimes get deadlock (wtf code doing!?)
+* ASM: WndProcTreeView - fixed TV_DRAG_RBUTTON define
++ TFastStrListEx.NameDelimiter - like in TStrList
++ TFastStrListEx.SetValue - like in TStrList
+
+MCK:
+* updated to MCK v3.23 (with some fixes)
+* MCKAppExpert200x wizard - fixed unit name 
+* TKOLListView.SetupLast - fixed crash 
++ TKOLListView.OnLVCustomDraw - added event assign
++ TKOLMemo.Paint\WYSIWIGPaintImplemented - add visual style for memo in designer mode
++ !!!ALPHA VERSION!!!: ux visual style mode for some controls in designer mode (PaintType: ptWYSIWIG) (WinXP minimum req.)
+
+err.pas:
+* moved from addons to kolmck folder 
+* fixed exception.message in IDE
+* source code formating
+
+common:
+* cleaning...
+* updated readmes
+* dpk packages replaced and renamed (KOLMCKXXXX.dpk)
+
+maybe forgot something...
+
+KOLAddons package will be updated later..
+
+-------------------------------------------------------------------
+24.03.10
+-------------------------------------------------------------------
+* пакет смешан с 2.89 версией
+
+-------------------------------------------------------------------
+22.09.09
+-------------------------------------------------------------------
+* добавлен асмовый вариант WinVer (MTsvDN)
+
+-------------------------------------------------------------------
+09.09.09 %)
+-------------------------------------------------------------------
+* начался глобальный рефакторинг:
+	* delphidef.inc объединен с KOLDEF.INC
+	* UNLOAD_RICHEDITLIB - по-умолчанию выключена
+	* MIRROR*.dpk -> KOLMCK_D%VER%.dpk
+	* удалены mirro*.res, оставлен один KOLMCK.res
+	* удалены DCU папки D2006-D2007 
+
+-------------------------------------------------------------------
+30.08.09
+-------------------------------------------------------------------
+* Совместимость с Delphi 2010
+
+-------------------------------------------------------------------
+19.08.09
+-------------------------------------------------------------------
+DefFont.FontHeight := -11;
+
+-------------------------------------------------------------------
+9.08.09
+-------------------------------------------------------------------
+изменения:
+
+*1. Строка 5115:
+    FBitBtnGetCaption: function( Self_: PControl; const S: KOLString ): KOLString;
+
+Кэпшен может быть Wide, т.ч. нужен KOLString
+
+*2. Строка 9724:
+function NewMDIChild( AParent: PControl; const ACaption: KOLString ): PControl;
+
+Кэпшен может быть Wide, т.ч. нужен KOLString
+
+*4. Строка 17105:
+  ( PKOLChar(@fData.Font.Name[0]), PKOLChar( Value ), Length(Value) * SizeOf(KOLChar) {LF_FACESIZE} ); //TODO: fixme
+
+При UNICODE_CTRLS необходимо учитывать SizeOf(KOLChar) иначе идет обрезка текста по середине...
+
+*5. лучше:
+  Find_Close( FD );
+переместить с стр.21583 на 3 строки ниже. Поскольку дальше используется FD.dwFileAttributes и FileTimeToLocalFileTime( FD.ftLastWriteTime, LFT ). И если щас (в XP) - это может быть непринципиально, то в последующем может вылезти косяк, т.к. фатически ты FD закрыл, но работать с ним хочешь...
+
+*6.
+procedure TDirList.ScanDirectory(const DirPath, Filter: KOLString;  Attr: DWord);
+добавлена новая директива FORCE_ALTERNATEFILENAME - принудительное использование альтернативного имени пути и имени файла для юникод путей 
+
+*7. Стр. 29024
+function ExcludeAmpersands( Self_: PControl; const S: KOLString ): KOLString;
+AnsiString -> KOLString
+
+*8. Стр. 31468 (Продолжение пункта 2) AnsiString -> KOLString
+
+*9. Стр. 32737
+   /// if WinVer >= wvNT then ЗАКОММЕНТИРОВАТЬ СТРОКУ ОБЯЗАТЕЛЬНО!!! Этот фикс для работы программ на Win9x/ME
+Если она раскоментированна и есть меню. Абздец наступает не только приложению, но и всей системе
+
+*10. Фикс утечки памяти в TControl.CreateWindow:
+
+*11. Стр. 4006
+procedure TDirList.ScanDirectoryEx(const DirPath, Filters: AnsiString;
+Фильтры могут быть KOLString
+
+*12. visual_xp_styles.inc
+ Sender.OnPaint(Sender, GetWindowDC(Msg.hWnd));
+->
+   dDC := GetWindowDC(Msg.hWnd);
+   Sender.OnPaint(Sender, dDC);
+   ReleaseDC( Msg.hWnd, dDC );
+
+*13. множество фиксов KOLadd, err для поддержки уникода и работы в 2007\2009 версии делфи
+
+MTsv DN
+
+*14. WinVer - теперь определяет Windows7. D[u]fa.
+-------------------------------------------------------------------
+5.08.09
+-------------------------------------------------------------------
+
+Первая ревизия основана на 2.88+ =)
+
+отличия от 2.88:
++ procedure TControl.TBClear;  {* |<#toolbar>     Deletes all buttons. Dufa }
++ property TControl.TBButtonLParam[const Idx: Integer]: DWORD read TBGetButtonLParam write TBSetButtonLParam;
+    {* |<#toolbar>  Allows to access/change LParam. Dufa }
++ добавлен MCKfakeClasses200x.inc для исправления глюка с ложными МСК варнингами(в версиях 2006-2009) // Dufa
+* DefFont = Tahoma
+* procedure TDirList.ScanDirectory исправлена утечка памяти // Dufa
+* function TControl.WndProcTransparent исправлено "странное" поведение приложения, при кол-во форм >= 2   // Galkov
+* procedure TControl.SetCurIndex устранен AV // Galkov
+* visual_xp_styles.inc:  function IsManifestFilePresent : boolean; исправлена ошибка при работе с библиотеками //Dufa
+
+*** возможно что-то забыл.... %)
+
+-------------------------------------------------------------------
+23.09.08
+-------------------------------------------------------------------
+
+Изменено
+========
+- Шрифт по умолчанию на Tahoma (для поддержки Unicode). Автор: azsd
+- Код функции _WStrComp.
+- Работа с файлами UTF-8 с BOM в TWStrList. Автор: azsd
+
+Исправлено
+==========
+- Ошибки при подключенной UNICODE_CTRLS:
+         CrackStack_MapInResource,
+		 CrackStack_MapInFile,
+		 ToRadix,
+		 InsertSeparators,
+		 IndexOfChar. Автор: MTsv DN
+- TGraphicTool.SetFontName. Использование функции (W)StrLCopy. Автор: azsd
+- StrIsStartingFrom. Для случая, когда либо строка, либо шаблон равен nil. Автор: azsd
+- WStrLoadFromFile. В функции WideString использовался вызов ANSI функции File2Str. Автор: azsd
+- WndProcBitBtn. Отрисовка Unicode символов. Автор: MTsv DN
+- WndProcLabelEffect. Отрисовка Unicode символов. Автор: MTsv DN
+- TTrayIcon.SetTrayIcon. Наполовину обрезался тултип при UNICODE_CTRLS. Автор: MTsv DN
+- TControl.TBSetTooltips. При использовании UNICODE_CTRLS. Автор: azsd
+- TBitmap.SetHeight (обе версии). Автор: MTsv DN
+- Color2RGB (ASM-версия). Автор: Hallif
+- Исправления TLIST_FAST. Автор: Vladimir Kladov и mdw.
+- Некорректная работа в случае с raWord. Автор: =BuckLr=
+
+Добавлено
+=========
+- Файлы: KOL_ansi.inc (в противовес KOL_unicode.inc набор функций и определений ANSI API). Автор: azsd (возврат совместимости с версией D3 D[u]fa, с версией D2 - Кладов)
+         MCKAppExpert200x.pas (визард для удобного создания проекта KOLMCK в Delphi 7, 2005-2009 (в 5 версии будет работать после незначительных изменений)). Автор: D[u]fa
+		 MirrorKOLPackageD1x.dpk. Файлы проектов для Delphi 2005-2009.
+		 MirrorKOLPackageD1x.res. Файлы ресурсов для Delphi 2005-2009.
+		 MirrorKOLPackageD1x.dproj. Файлы проектов для Delphi 2007-2009.
+- Поддержка Delphi 2009 в KOL. Автор: azsd (возврат совместимости с версиями <= D7 D[u]fa)
+- Поддержка Unicode для MCK в Delphi 2009. Автор: MTsv DN
+- Процедура Put для TWStrList. Автор: azsd
+- Процедура WTextArea для Canvas. Автор: MTsv DN
+- Процедуры:
+         _aLStrFromPCharLen,
+         _aLStrFromPChar,
+		 RemoveWStr. Автор: azsd 
+- Улучшен код генерации МСК для 200х версий. Автор: D[u]fa
+		 
+Удалено
+=======
+- Файлы: delphiusesh.inc (нигде не использовался), 
+         mckAccEditor.inc (код был перенесен в PAS файл), 
+		 mckActionListEditor.inc (код был перенесен в PAS файл), 
+		 mckFileFilterEditor.inc (код был перенесен в PAS файл),
+		 mckLVColumnsEditor.inc (код был перенесен в PAS файл),
+		 mckMenuEditor.inc (код был перенесен в PAS файл),
+		 mckMenuEditorD2.pas (нигде не использовался),
+		 mckMenuEditorD3.pas (нигде не использовался),
+		 mckMenuEditorD4.pas (нигде не использовался),
+		 mckTBEditor.dfm (нигде не использовался),
+		 mckToolbarEditor.inc (код был перенесен в PAS файл),
+		 mckToolbarEditorD2.pas (нигде не использовался),
+		 mckToolbarEditorD3.pas (нигде не использовался),
+		 mckToolbarEditorD4.pas (нигде не использовался)
+
